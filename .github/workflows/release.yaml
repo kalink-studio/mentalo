@@ -1,8 +1,9 @@
 name: Release
 
 on:
-  push:
-    tags: ['v*']
+  pull_request:
+    branches: [main]
+    types: [closed]
   workflow_dispatch:
     inputs:
       image_tag:
@@ -24,7 +25,7 @@ env:
 jobs:
   deploy-production:
     name: Deploy to Production
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'changeset-release/')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -36,18 +37,22 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
 
-      - name: Get version from tag
+      - name: Get version from package
         id: version
-        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Get commit SHA for tag
+      - name: Get commit SHA for release
         id: sha
         run: |
-          COMMIT_SHA=$(git rev-list -n 1 ${{ steps.version.outputs.tag }})
-          SHORT_SHA=$(echo $COMMIT_SHA | cut -c1-7)
-          echo "short=$SHORT_SHA" >> $GITHUB_OUTPUT
-          echo "full=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          COMMIT_SHA=$(git rev-parse HEAD)
+          SHORT_SHA=$(git rev-parse --short=7 "$COMMIT_SHA")
+          echo "short=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+          echo "full=$COMMIT_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Log in to Container Registry
         uses: docker/login-action@v3
@@ -55,6 +60,22 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait for source image
+        run: |
+          SOURCE_TAG="${{ steps.sha.outputs.short }}"
+          for attempt in {1..20}; do
+            if docker manifest inspect "${{ env.IMAGE_NAME }}:$SOURCE_TAG" > /dev/null 2>&1; then
+              echo "Found source image ${{ env.IMAGE_NAME }}:$SOURCE_TAG"
+              exit 0
+            fi
+
+            echo "Waiting for source image ${{ env.IMAGE_NAME }}:$SOURCE_TAG (attempt $attempt/20)"
+            sleep 15
+          done
+
+          echo "Source image not found after waiting: ${{ env.IMAGE_NAME }}:$SOURCE_TAG"
+          exit 1
 
       - name: Re-tag image with version
         run: |

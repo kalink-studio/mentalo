@@ -62,7 +62,7 @@ jobs:
 
       - name: Extract short SHA
         id: sha
-        run: echo "short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "short=$(git rev-parse --short=7 HEAD)" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -126,7 +126,7 @@ jobs:
       - name: Create Release Pull Request
         uses: changesets/action@v1
         with:
-          title: 'chore: version packages'
-          commit: 'chore: version packages'
+          title: 'chore: production deployment'
+          commit: 'chore: production deployment'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
