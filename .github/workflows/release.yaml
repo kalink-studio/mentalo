@@ -71,7 +71,13 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add k8s/overlays/production/kustomization.yaml
-          git diff --staged --quiet || git commit -m "chore(production): deploy ${{ steps.version.outputs.tag }}"
+          if git diff --staged --quiet; then
+            echo "No production kustomization change to commit"
+            exit 0
+          fi
+          git commit -m "chore(production): deploy ${{ steps.version.outputs.tag }}"
+          git fetch origin main
+          git rebase origin/main
           git push origin HEAD:main
 
   manual-deploy:
@@ -96,5 +102,11 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add k8s/overlays/${{ inputs.environment }}/kustomization.yaml
-          git diff --staged --quiet || git commit -m "chore(${{ inputs.environment }}): deploy ${{ inputs.image_tag }} [manual]"
-          git push
+          if git diff --staged --quiet; then
+            echo "No kustomization change to commit"
+            exit 0
+          fi
+          git commit -m "chore(${{ inputs.environment }}): deploy ${{ inputs.image_tag }} [manual]"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
