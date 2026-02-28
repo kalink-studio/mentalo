@@ -1,10 +1,66 @@
+"use client";
+
 import type { SVGProps } from "react";
+import { useEffect, useRef } from "react";
+import {
+  animate,
+  motion,
+  useAnimationFrame,
+  useMotionValue,
+  useReducedMotion,
+} from "motion/react";
 import styles from "./mentalo-logo.module.css";
 
-type MentaloLogoProps = SVGProps<SVGSVGElement>;
+interface MentaloLogoProps extends SVGProps<SVGSVGElement> {
+  isHovered?: boolean;
+}
 
-export function MentaloLogo({ className, ...props }: MentaloLogoProps) {
-  const logoClassName = [styles.mentaloLogo, className].filter(Boolean).join(" ");
+export function MentaloLogo({
+  className,
+  isHovered = false,
+  ...props
+}: MentaloLogoProps) {
+  const logoClassName = [styles.mentaloLogo, className]
+    .filter(Boolean)
+    .join(" ");
+
+  const shouldReduceMotion = useReducedMotion();
+  const velocity = useMotionValue(18);
+  const angle = useMotionValue(0);
+  const decayAnimationRef = useRef<ReturnType<typeof animate> | null>(null);
+
+  useEffect(() => {
+    if (shouldReduceMotion) {
+      decayAnimationRef.current?.stop();
+      velocity.set(18);
+      return;
+    }
+
+    if (!isHovered) {
+      return;
+    }
+
+    decayAnimationRef.current?.stop();
+    velocity.set(150);
+    decayAnimationRef.current = animate(velocity, 18, {
+      type: "spring",
+      bounce: 0,
+      duration: 2.5,
+    });
+  }, [isHovered, shouldReduceMotion, velocity]);
+
+  useEffect(() => {
+    return () => {
+      decayAnimationRef.current?.stop();
+    };
+  }, []);
+
+  useAnimationFrame((_time, delta) => {
+    if (shouldReduceMotion) return;
+
+    const dt = Math.min(delta / 1000, 0.1);
+    angle.set((angle.get() + velocity.get() * dt) % 360);
+  });
 
   return (
     <svg
@@ -17,7 +73,13 @@ export function MentaloLogo({ className, ...props }: MentaloLogoProps) {
         className={styles.mentaloLogoShell}
         d="m786.55 144.52v379.81c0 79.8-64.2 144.52-143.35 144.52l-18.54.24c-69.26 80.51-122.81 108.63-212.5 117.41-8.65.83-13.95-9.14-7.65-15.84 50.96-54.17-7.94-101.33-8.42-101.81h-252.75c-79.14.01-143.34-64.72-143.34-144.52v-379.81c0-79.85 64.2-144.52 143.35-144.52h499.85c79.15 0 143.35 64.67 143.35 144.52z"
       />
-      <g className={styles.mentaloLogoRotatingCore}>
+      <motion.g
+        className={styles.mentaloLogoRotatingCore}
+        style={{
+          rotate: angle,
+          transformOrigin: "50% 42.948%",
+        }}
+      >
         <g className={styles.mentaloLogoSunRays}>
           <path d="m274.96 284.11-12.38-38.41h-84.78c-24.92 0-35.28 32.15-15.12 46.91l65.45 47.94 37.48-27.45c9.02-6.6 12.79-18.31 9.34-28.99z" />
           <path d="m305.03 435.41h-42.45l-26.94 83.58c-7.7 23.89 19.42 43.76 39.58 28.99l68.58-50.24-14.32-44.42c-3.44-10.69-13.32-17.92-24.46-17.92z" />
@@ -34,7 +96,7 @@ export function MentaloLogo({ className, ...props }: MentaloLogoProps) {
           className={styles.mentaloLogoSunCore}
           d="m520.94 368.01 37.48-27.45-37.48-27.45c-9.02-6.6-12.79-18.31-9.34-28.99l12.38-38.41h-42.45c-11.14 0-21.02-7.23-24.46-17.92l-14.32-44.42-34.35 25.16c-9.02 6.6-21.22 6.6-30.24 0l-34.35-25.16-14.32 44.42c-3.44 10.69-13.32 17.92-24.46 17.92h-42.45l12.38 38.41c3.44 10.69-.33 22.39-9.34 28.99l-37.48 27.45 37.48 27.45c9.02 6.6 12.79 18.31 9.34 28.99l-12.38 38.41h42.45c11.14 0 21.02 7.23 24.46 17.92l14.32 44.42 34.35-25.16c9.02-6.6 21.22-6.6 30.24 0l34.35 25.16 14.32-44.42c3.44-10.69 13.32-17.92 24.46-17.92h42.45l-12.38-38.41c-3.44-10.69.33-22.39 9.34-28.99z"
         />
-      </g>
+      </motion.g>
     </svg>
   );
 }

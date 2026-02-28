@@ -3,25 +3,17 @@
 }
 
 .mentaloLogoShell {
-  fill: var(--mint);
+  fill: var(--sys-color-brand-mint);
 }
 
 .mentaloLogoSunRays {
-  fill: var(--yellow);
+  fill: var(--sys-color-accent-yellow);
 }
 
 .mentaloLogoSunCore {
-  fill: #fff;
+  fill: var(--sys-color-white);
 }
 
 .mentaloLogoRotatingCore {
-  animation: mentalo-logo-spin 20s linear infinite;
-  transform-box: view-box;
-  transform-origin: 50% 42.948%;
-}
-
-@keyframes mentalo-logo-spin {
-  100% {
-    transform: rotate(360deg);
-  }
+  will-change: transform;
 }

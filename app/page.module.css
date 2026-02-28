@@ -1,8 +1,20 @@
 .landing {
+  --landing-shell-pad: clamp(var(--sys-spacing-2), 4vw, var(--sys-spacing-4));
+  --landing-frame-radius: var(--sys-spacing-4);
+  --landing-content-pad-block: var(--sys-spacing-4);
+  --landing-content-pad-inline: var(--sys-spacing-4);
+  --landing-link-gap: var(--sys-spacing-3);
+  --landing-card-gap: var(--sys-spacing-3);
+  --landing-heading-gap: var(--sys-spacing-1);
+  --landing-contact-inset-block: var(--sys-spacing-2);
+  --landing-contact-inset-inline: var(--sys-spacing-4);
+  --landing-status-pad-block: var(--sys-spacing-1);
+  --landing-status-pad-inline: var(--sys-spacing-3);
+
   position: relative;
   width: 100%;
   min-height: 100svh;
-  padding: 4vw;
+  padding: var(--landing-shell-pad);
   display: flex;
   align-items: stretch;
   justify-content: stretch;
@@ -12,8 +24,8 @@
   position: relative;
   flex: 1;
   min-height: 100%;
-  background-color: var(--bg);
-  border-radius: 24px;
+  background-color: var(--sys-color-surface-primary);
+  border-radius: var(--landing-frame-radius);
   overflow: hidden;
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -26,40 +38,18 @@
   z-index: 10;
   width: 100%;
   min-height: 100%;
-  padding: 24px 20px;
+  padding: var(--landing-content-pad-block) var(--landing-content-pad-inline);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-}
-
-.landingHeader,
-.landingFooter {
-  width: 100%;
-  display: flex;
-}
-
-.landingHeader {
-  justify-content: flex-end;
-  align-items: flex-start;
-}
-
-.landingFooter {
-  justify-content: space-between;
-  align-items: flex-end;
-}
-
-.landingHero {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-  z-index: 15;
 }
 
 .landingLogoWrap {
+  display: flex;
+  justify-content: center;
+
   position: relative;
+
   animation: float 6s ease-in-out infinite;
   filter: drop-shadow(0 20px 30px rgba(112, 196, 164, 0.4));
 }
@@ -84,88 +74,134 @@
 }
 
 .landingLink {
-  text-decoration: none;
-  display: block;
-}
+  position: relative;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--landing-link-gap);
 
-.landingLink:hover .landingCard {
-  box-shadow: 8px 8px 0 var(--yellow);
+  text-decoration: none;
 }
 
 .landingCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--landing-card-gap);
   text-align: center;
-  max-width: 500px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  padding: 20px 30px;
-  border-radius: 20px;
-  box-shadow: 8px 8px 0 var(--mint);
-  transition: box-shadow 0.1s ease-out;
+}
+
+.landingHeading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--landing-heading-gap);
 }
 
 .landingEyebrow {
   font-size: 1rem;
   font-weight: 400;
-  margin: 0 0 5px;
-  color: var(--ink);
+  margin: 0;
+  color: var(--sys-color-text-primary);
   text-transform: uppercase;
   letter-spacing: 2px;
 }
 
 .landingTitle {
-  margin: 0 0 10px;
+  margin: 0;
   font-family: "Impact", sans-serif;
   font-size: 2.5rem;
   line-height: 1;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--mint);
+  color: var(--sys-color-brand-mint);
 }
 
 .landingContact {
+  --duration: 250ms;
+  --ease-morph: cubic-bezier(0.645, 0.045, 0.355, 1);
+
+  position: relative;
+
   display: inline-block;
-  margin-top: 16px;
-  margin-bottom: 8px;
-  padding: 10px 24px;
-  border-radius: 40px;
-  color: var(--ink);
+  margin: 0;
+  padding: 0;
+
+  color: var(--sys-color-text-primary);
+
   font-size: 0.9rem;
   font-weight: 400;
   letter-spacing: 1px;
-  transition:
-    background 0.1s ease-out,
-    color 0.1s ease-out;
+
+  &::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    
+    background-color: var(--sys-color-text-primary);
+    border-radius: 1px;
+
+    transition: 
+      top var(--duration) var(--ease-morph),
+      left var(--duration) var(--ease-morph),
+      width var(--duration) var(--ease-morph),
+      height var(--duration) var(--ease-morph),
+      background-color var(--duration) var(--ease-morph),
+      border-radius var(--duration) var(--ease-morph);
+  }
 }
 
-.landingLink:hover .landingContact {
-  background: var(--yellow);
+@media (hover: hover) and (pointer: fine) {
+  .landingLink:hover .landingContact {
+    &::before {
+      top: calc(-1 * var(--landing-contact-inset-block));
+      left: calc(-1 * var(--landing-contact-inset-inline));
+      width: calc(100% + 2 * var(--landing-contact-inset-inline));
+      height: calc(100% + 2 * var(--landing-contact-inset-block));
+      background-color: var(--sys-color-accent-yellow);
+      border-radius: var(--sys-spacing-6);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landingContact::before {
+    transition: none;
+  }
 }
 
 .landingStatus {
+  align-self: flex-end;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 5px 12px;
-  border-radius: 40px;
+  padding: var(--landing-status-pad-block) var(--landing-status-pad-inline);
+  border-radius: var(--sys-spacing-6);
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--sys-color-text-primary);
+  color: var(--sys-color-surface-primary);
 }
 
 .landingStatusYellow {
-  background: var(--yellow);
-  color: var(--ink);
+  background: var(--sys-color-accent-yellow);
+  color: var(--sys-color-text-primary);
 }
 
 .landingStatusDot {
-  width: 8px;
-  height: 8px;
+  width: var(--sys-spacing-2);
+  height: var(--sys-spacing-2);
   border-radius: 50%;
-  margin-right: 8px;
-  background: var(--mint);
+  margin-right: var(--sys-spacing-2);
+  background: var(--sys-color-brand-mint);
   animation: pulse 1.5s infinite alternate;
 }
 
@@ -181,11 +217,8 @@
   }
 }
 
-.landingPartner {
-  max-width: 600px;
-}
-
 .landingPartnerLogo {
+  align-self: flex-start;
   width: 75px;
   height: auto;
   flex-shrink: 0;
@@ -193,15 +226,15 @@
 
 @media (min-width: 769px) {
   .landing {
-    padding: 2vw;
-  }
-
-  .landingFrame {
-    border-radius: 40px;
-  }
-
-  .landingContent {
-    padding: 20px;
+    --landing-shell-pad: clamp(var(--sys-spacing-2), 2vw, var(--sys-spacing-3));
+    --landing-frame-radius: var(--sys-spacing-6);
+    --landing-content-pad-block: var(--sys-spacing-4);
+    --landing-content-pad-inline: var(--sys-spacing-4);
+    --landing-link-gap: var(--sys-spacing-4);
+    --landing-card-gap: var(--sys-spacing-6);
+    --landing-heading-gap: var(--sys-spacing-3);
+    --landing-status-pad-block: var(--sys-spacing-2);
+    --landing-status-pad-inline: var(--sys-spacing-3);
   }
 
   .landingTitle {
@@ -212,21 +245,8 @@
     width: 170px;
   }
 
-  .landingHero {
-    gap: 20px;
-  }
-
-  .landingCard {
-    padding: 25px 40px;
-  }
-
   .landingEyebrow {
-    margin: 0 0 15px;
     font-size: 1.25rem;
-  }
-
-  .landingContact {
-    margin-top: 40px;
   }
 
   .landingPartnerLogo {
@@ -234,14 +254,16 @@
   }
 
   .landingStatus {
-    padding: 6px 16px;
     font-size: 0.85rem;
   }
 }
 
 @media (min-width: 1025px) {
-  .landingContent {
-    padding: 40px;
+  .landing {
+    --landing-content-pad-block: var(--sys-spacing-6);
+    --landing-content-pad-inline: var(--sys-spacing-6);
+    --landing-link-gap: var(--sys-spacing-6);
+    --landing-card-gap: var(--sys-spacing-7);
   }
 
   .landingTitle {
@@ -252,15 +274,10 @@
     width: 220px;
   }
 
-  .landingHero {
+  .landingLink {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    gap: 40px;
-  }
-
-  .landingCard {
-    padding: 40px 60px;
   }
 }
