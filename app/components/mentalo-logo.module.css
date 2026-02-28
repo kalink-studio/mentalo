@@ -1,0 +1,27 @@
+.mentaloLogo {
+  display: block;
+}
+
+.mentaloLogoShell {
+  fill: var(--mint);
+}
+
+.mentaloLogoSunRays {
+  fill: var(--yellow);
+}
+
+.mentaloLogoSunCore {
+  fill: #fff;
+}
+
+.mentaloLogoRotatingCore {
+  animation: mentalo-logo-spin 20s linear infinite;
+  transform-box: view-box;
+  transform-origin: 50% 42.948%;
+}
+
+@keyframes mentalo-logo-spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}

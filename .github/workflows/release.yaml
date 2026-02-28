@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy (commit SHA or version tag)'
+        required: true
+        type: string
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/kalink-studio/mentalo
+
+jobs:
+  deploy-production:
+    name: Deploy to Production
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get version from tag
+        id: version
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Get commit SHA for tag
+        id: sha
+        run: |
+          COMMIT_SHA=$(git rev-list -n 1 ${{ steps.version.outputs.tag }})
+          SHORT_SHA=$(echo $COMMIT_SHA | cut -c1-7)
+          echo "short=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "full=$COMMIT_SHA" >> $GITHUB_OUTPUT
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Re-tag image with version
+        run: |
+          docker pull ${{ env.IMAGE_NAME }}:${{ steps.sha.outputs.short }}
+          docker tag ${{ env.IMAGE_NAME }}:${{ steps.sha.outputs.short }} ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}
+          docker push ${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}
+
+      - name: Update production kustomization
+        run: |
+          sed -i "s|newTag: .*|newTag: ${{ steps.version.outputs.tag }}|" k8s/overlays/production/kustomization.yaml
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add k8s/overlays/production/kustomization.yaml
+          git diff --staged --quiet || git commit -m "chore(production): deploy ${{ steps.version.outputs.tag }}"
+          git push origin HEAD:main
+
+  manual-deploy:
+    name: Manual Deploy
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update kustomization
+        run: |
+          sed -i "s|newTag: .*|newTag: ${{ inputs.image_tag }}|" k8s/overlays/${{ inputs.environment }}/kustomization.yaml
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add k8s/overlays/${{ inputs.environment }}/kustomization.yaml
+          git diff --staged --quiet || git commit -m "chore(${{ inputs.environment }}): deploy ${{ inputs.image_tag }} [manual]"
+          git push
