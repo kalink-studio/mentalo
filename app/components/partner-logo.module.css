@@ -3,9 +3,9 @@
 }
 
 .partnerLogoAccent {
-  fill: var(--yellow);
+  fill: var(--sys-color-accent-yellow);
 }
 
 .partnerLogoWordmark {
-  fill: var(--ink);
+  fill: var(--sys-color-text-primary);
 }
