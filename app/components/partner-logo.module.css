@@ -1,0 +1,11 @@
+.partnerLogo {
+  display: block;
+}
+
+.partnerLogoAccent {
+  fill: var(--yellow);
+}
+
+.partnerLogoWordmark {
+  fill: var(--ink);
+}
