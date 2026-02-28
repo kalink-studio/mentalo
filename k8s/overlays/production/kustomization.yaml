@@ -11,7 +11,7 @@ patches:
 
 images:
   - name: ghcr.io/kalink-studio/mentalo
-    newTag: v0.1.0
+    newTag: a39bf65
 
 replicas:
   - name: mentalo
